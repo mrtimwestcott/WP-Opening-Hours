@@ -99,21 +99,30 @@ class Weekdays extends AbstractModule {
     if (count($days) == 1)
       return $short ? $days[0]->getShortName() : $days[0]->getName();
 
-    $sequence = true;
-    for ($i = 1; $i < count($days); ++$i) {
-      if ($days[$i-1]->getRelativeIndex() !== $days[$i]->getRelativeIndex()-1) {
-        $sequence = false;
+    $sequence = false;
+    $numDays = count($days);
+    for ($i = 0; $i < $numDays; $i++) {
+      $currentSequence = true;
+      for ($j = 1; $j < $numDays; $j++) {
+        if (($days[($i+$j-1)%$numDays]->getRelativeIndex()+1)%7 !== $days[($i+$j)%$numDays]->getRelativeIndex()%7) {
+          $currentSequence = false;
+          break;
+        }
+      }
+      $sequence = $currentSequence;
+      if ($sequence) {
+        $first = $days[$i];
+        $last = $i > 0 ? $days[$i-1] : $days[$numDays - 1];
         break;
       }
     }
-
+	  
     if ($sequence) {
       $format = "%s - %s";
-      $last = $days[count($days)-1];
       if ($short) {
-        return sprintf($format, $days[0]->getShortName(), $last->getShortName());
+        return sprintf($format, $first->getShortName(), $last->getShortName());
       } else {
-        return sprintf($format, $days[0]->getName(), $last->getName());
+        return sprintf($format, $first->getName(), $last->getName());
       }
     } else {
       $names = array_map(function (Weekday $w) use ($short) {
